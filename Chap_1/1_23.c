@@ -6,39 +6,51 @@
 ***********************************************/
 
 #include <stdio.h>
+#define MAX 500
+#define INCOMMENT 1
+#define OUTCOMMENT 0
 
-int main(void)
+int getLine(char [], int);
+
+int main(int argc, char const *argv[])
 {
-  int c,prevc;
-	int code = 1;
-	int slash = 0;
-	int prevcomment = 0;
-	int quote = 0;
-
-	while ((c=getchar()) != EOF) {
-		if ((c == '\'' || c == '"') && code) {
-			quote = !quote;
-			/* make sure we dont output prevc coming out
-			of a quote */
-			prevcomment = 1;
-		}
-		if (!quote) {
-			if (prevc == '/' && c == '*') { /* comment found */
-				code = 0;
+	int c, nextC, lim, len, state;
+	state = OUTCOMMENT;	
+	lim = MAX;
+	char line[lim];
+	while ((len = getLine(line,lim)) > 0) {
+		for (int i = 0; i < len; ++i) {
+			
+			c = line[i];
+			if (i < len-1)
+				nextC = line[i+1];
+			if (state == OUTCOMMENT && c == '/' && nextC == '*') {
+				i++;
+				state = INCOMMENT;
+				continue;
 			}
-			if (prevc == '*' && c == '/') { /* out of comment */
-				code = 1;
-				prevcomment = 1;
+			if (state == INCOMMENT && c == '*' && nextC == '/') {
+				i++;
+				state = OUTCOMMENT;
+				continue;
 			}
+			if (state == OUTCOMMENT) 
+				putchar(c);			
 		}
-		if (prevc == '/' && c != '*' && !prevcomment)
-			putchar(prevc);
-		if (code && !((c == '/') && !quote)) {
-			prevcomment = 0;
-			putchar(c);						
-		}
-		prevc = c;
-	}
-	
+	} 	
 	return 0;
+}
+
+
+int getLine(char a[], int lim)
+{
+	int c, i;
+	for (i = 0; i < lim-1 && (c = getchar()) !=EOF && c != '\n'; ++i)
+		a[i] = c;
+	if (c == '\n') {
+		a[i] = '\n';
+		i++;
+	}
+	a[i] = '\0';
+	return i;
 }
